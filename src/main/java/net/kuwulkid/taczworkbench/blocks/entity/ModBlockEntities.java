@@ -1,0 +1,25 @@
+package net.kuwulkid.taczworkbench.blocks.entity;
+
+import com.tacz.guns.init.ModBlocks;
+import net.kuwulkid.taczworkbench.Taczworkbench;
+import net.kuwulkid.taczworkbench.blocks.BlocksInit;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+public class ModBlockEntities {
+    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
+            DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, Taczworkbench.MOD_ID);
+
+    public static final RegistryObject<BlockEntityType<WorkbenchEntity>> WORKBENCH =
+            BLOCK_ENTITIES.register("workbench", () ->
+                    BlockEntityType.Builder.of(WorkbenchEntity::new,
+                            BlocksInit.WORKBENCH.get()).build(null));
+
+
+    public static void register(IEventBus eventBus) {
+        BLOCK_ENTITIES.register(eventBus);
+    }
+}
