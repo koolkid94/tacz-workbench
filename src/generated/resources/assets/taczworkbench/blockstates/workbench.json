@@ -1,7 +1,8 @@
 {
   "variants": {
-    "": {
-      "model": "taczworkbench:block/workbench"
-    }
+    "facing=north": { "model": "taczworkbench:block/workbench" },
+    "facing=east":  { "model": "taczworkbench:block/workbench", "y": 90 },
+    "facing=south": { "model": "taczworkbench:block/workbench", "y": 180 },
+    "facing=west":  { "model": "taczworkbench:block/workbench", "y": 270 }
   }
 }

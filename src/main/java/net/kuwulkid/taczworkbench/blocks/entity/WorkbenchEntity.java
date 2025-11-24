@@ -49,7 +49,7 @@ public class WorkbenchEntity extends BlockEntity {
     private static final int INPUT_SLOT = 0;
     protected final ContainerData data;
 
-    private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
+    private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.of(() -> itemhandler);
 
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
@@ -121,7 +121,52 @@ public class WorkbenchEntity extends BlockEntity {
 
     }
 
-    public ItemStack getRenderStack() {
-return Items.STICK.getDefaultInstance();
+    public ItemStack getRenderStack(int slot) {
+        //System.out.println(itemhandler.getStackInSlot(slot) + " RENDERSTACK");
+        return itemhandler.getStackInSlot(slot);
     }
+
+    public ItemStack getItem(int slot) {
+       // System.out.println(itemhandler.getStackInSlot(slot) + " GET ITEM");
+        return itemhandler.getStackInSlot(slot);
+    }
+
+    public void setItem(int slot, ItemStack stack) {
+        itemhandler.setStackInSlot(slot, stack);
+        setChanged(); // marks chunk dirty
+        if (level != null && !level.isClientSide()) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
+    public ItemStack removeItem(int slot) {
+        ItemStack stack = itemhandler.getStackInSlot(slot);
+        itemhandler.setStackInSlot(slot, ItemStack.EMPTY);
+        setChanged();
+        if (level != null && !level.isClientSide()) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+        return stack;
+    }
+
+
+    @Override
+    public CompoundTag getUpdateTag() {
+        // Called when the chunk is sent to the client
+        CompoundTag tag = new CompoundTag();
+        this.saveAdditional(tag);
+        return tag;
+    }
+
+    @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        // Called when the block changes and client needs to be updated
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    public void onDataPacket(ClientGamePacketListener net, ClientboundBlockEntityDataPacket pkt) {
+        this.load(pkt.getTag());
+    }
+
+
 }
