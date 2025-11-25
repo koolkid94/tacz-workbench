@@ -2,12 +2,16 @@ package net.kuwulkid.taczworkbench.blocks.custom;
 
 import com.tacz.guns.item.AttachmentItem;
 import com.tacz.guns.item.ModernKineticGunItem;
+import com.tacz.guns.network.NetworkHandler;
 import net.kuwulkid.taczworkbench.blocks.entity.ModBlockEntities;
 import net.kuwulkid.taczworkbench.blocks.entity.WorkbenchEntity;
 import net.kuwulkid.taczworkbench.blocks.helper.ShapeUtils;
+import net.kuwulkid.taczworkbench.network.AttachmentMessage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -37,6 +41,8 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
+
+import static com.tacz.guns.api.item.attachment.AttachmentType.SCOPE;
 
 public class Workbench extends BaseEntityBlock {
     public static final EnumProperty<BedPart> PART = BlockStateProperties.BED_PART;
@@ -181,15 +187,27 @@ public class Workbench extends BaseEntityBlock {
             workbench.setChanged();
         }
 
-        if (level.isClientSide) {
-            Vec3 hitPos = hit.getLocation();
-            level.addParticle(ParticleTypes.FLAME, hitPos.x, hitPos.y, hitPos.z, 0, 0, 0);
-        }
 
         if(mainHand.getItem().toString().equals("attachment") && workbench.getItem(0).getItem() instanceof ModernKineticGunItem){
             AttachmentItem attachment = (AttachmentItem) mainHand.getItem();
-            attachment.getAttachmentId(mainHand.getItem().getDefaultInstance());
-            System.out.println(attachment.getType(mainHand.getItem().getDefaultInstance()));
+            ModernKineticGunItem tableItem = (ModernKineticGunItem) workbench.getItem(0).getItem();
+
+            System.out.println("READ ME HERE: " + tableItem.allowAttachment(workbench.getItem(0), mainHand));
+
+            tableItem.installAttachment(workbench.getItem(0), mainHand);
+
+            AttachmentMessage message = new AttachmentMessage(mainHand, 0, SCOPE); //dont know what scope does
+            NetworkHandler.CHANNEL.sendToServer(message);
+
+            if(!player.getAbilities().instabuild){
+                mainHand.shrink(1);
+                //in creative mode
+            }
+            if (level.isClientSide) {
+                Vec3 hitPos = hit.getLocation();
+                level.addParticle(ParticleTypes.SMOKE, hitPos.x, hitPos.y, hitPos.z, 0, 0, 0);
+                level.playLocalSound(pos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 1.0F, 1.0F, false);
+            }
 
         }
 
