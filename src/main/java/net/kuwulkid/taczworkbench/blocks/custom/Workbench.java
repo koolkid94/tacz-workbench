@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -60,6 +61,24 @@ public class Workbench extends BaseEntityBlock {
         return ShapeUtils.rotateY(makeShape(), Direction.NORTH, facing);
     }
 
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state,
+                            @Nullable LivingEntity placer, ItemStack stack) {
+
+        Direction facing = state.getValue(FACING);
+
+        // Left relative to the block's facing
+        Direction left = facing.getClockWise();
+
+        BlockPos otherPos = pos.relative(left);
+
+        level.setBlock(otherPos,
+                state.setValue(PART, BedPart.HEAD),
+                3
+        );
+    }
+
+
     public Workbench(Properties pProperties) {
         super(pProperties);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(PART, BedPart.FOOT));
@@ -72,78 +91,106 @@ public class Workbench extends BaseEntityBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
-        // Player’s facing direction, opposite because blocks "face" toward the player
-        Direction playerFacing = ctx.getHorizontalDirection().getOpposite();
-        return this.defaultBlockState().setValue(FACING, playerFacing);
+        Direction facing = ctx.getHorizontalDirection().getOpposite();
+        return this.defaultBlockState()
+                .setValue(FACING, facing)
+                .setValue(PART, BedPart.FOOT);
     }
 
     @Override
-    public @Nullable BlockEntity newBlockEntity(BlockPos pPos, BlockState pState) {
-        return new WorkbenchEntity( pPos, pState);
+    public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return state.getValue(PART) == BedPart.FOOT
+                ? new WorkbenchEntity(pos, state)
+                : null;
     }
+
 
     public RenderShape getRenderShape(BlockState pState){
         return RenderShape.MODEL;
     }
 
     @Override
-    public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
-        if (pState.getBlock() != pNewState.getBlock()) {
-            BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-            if (blockEntity instanceof WorkbenchEntity) {
-                ((WorkbenchEntity) blockEntity).drops();
+    public void onRemove(BlockState state, Level level, BlockPos pos,
+                         BlockState newState, boolean isMoving) {
+
+        if (state.getBlock() == newState.getBlock()) {
+            super.onRemove(state, level, pos, newState, isMoving);
+            return;
+        }
+
+        // If this part is broken, also break the other half
+        Direction facing = state.getValue(FACING);
+
+        Direction left = state.getValue(FACING).getClockWise();
+
+        BlockPos other = (state.getValue(PART) == BedPart.FOOT)
+                ? pos.relative(left)
+                : pos.relative(left.getOpposite());
+
+
+        BlockState otherState = level.getBlockState(other);
+
+        if (otherState.getBlock() == this) {
+            level.destroyBlock(other, false);
+        }
+
+        // Drop inventory if we broke the FOOT (BE location)
+        if (state.getValue(PART) == BedPart.FOOT) {
+            BlockEntity blockEntity = level.getBlockEntity(pos);
+            if (blockEntity instanceof WorkbenchEntity w) {
+                w.drops();
             }
         }
 
-        super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
+        super.onRemove(state, level, pos, newState, isMoving);
     }
+
 
     @Override
-    public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
+    public InteractionResult use(BlockState state, Level level, BlockPos pos,
+                                 Player player, InteractionHand hand, BlockHitResult hit) {
 
-        WorkbenchEntity workbench = (WorkbenchEntity) pLevel.getBlockEntity(pPos);
-        ItemStack mainHand = pPlayer.getMainHandItem();
+        // If we hit the HEAD half, redirect to the FOOT
+        if (state.getValue(PART) == BedPart.HEAD) {
+            Direction left = state.getValue(FACING).getClockWise();
+            pos = pos.relative(left.getOpposite()); // FOOT is opposite of left
+            state = level.getBlockState(pos);
+        }
+
+        // Now pos always refers to the FOOT (the BE location)
+        BlockEntity be = level.getBlockEntity(pos);
+
+        if (!(be instanceof WorkbenchEntity workbench)) {
+            return InteractionResult.PASS;
+        }
+
+        // >>> Your interaction code here, unchanged <<<
+        ItemStack mainHand = player.getMainHandItem();
+
         if (!mainHand.isEmpty() && workbench.getItem(0).isEmpty()) {
             ItemStack toInsert = mainHand.copy();
-            toInsert.setCount(1); // only take 1 item (change if needed)
+            toInsert.setCount(1);
             workbench.setItem(0, toInsert);
-            System.out.println("TO INSERT" + toInsert);
             mainHand.shrink(1);
             workbench.setChanged();
-            return InteractionResult.CONSUME;
-        }
-        if (mainHand.isEmpty()) {
-            assert workbench != null;
-            if (!workbench.getItem(0).isEmpty()) {
-                Containers.dropItemStack(pLevel, pPos.getX(), pPos.getY() + .43, pPos.getZ(), workbench.removeItem(0));
-                workbench.setChanged();
-            }
+            return InteractionResult.SUCCESS;
         }
 
-
-        Vec3 hitPos = pHit.getLocation();   // <-- EXACT world-space click location
-        Direction face = pHit.getDirection(); // Which face
-
-        // Convert to coordinates *inside the block* (0–1 range)
-        double localX = hitPos.x - pPos.getX();
-        double localY = hitPos.y - pPos.getY();
-        double localZ = hitPos.z - pPos.getZ();
-
-        System.out.println("Hit local coords: " +
-                localX + ", " + localY + ", " + localZ);
-
-        if (pLevel.isClientSide) { // Only run on client
-            pLevel.addParticle(
-                    ParticleTypes.FLAME,
-                    hitPos.x, hitPos.y, hitPos.z,
-                    0, 0, 0 // motion
-            );
+        if (mainHand.isEmpty() && !workbench.getItem(0).isEmpty()) {
+            Containers.dropItemStack(level, pos.getX(), pos.getY() + .43, pos.getZ(),
+                    workbench.removeItem(0));
+            workbench.setChanged();
         }
 
+        // particle stuff...
+        if (level.isClientSide) {
+            Vec3 hitPos = hit.getLocation();
+            level.addParticle(ParticleTypes.FLAME, hitPos.x, hitPos.y, hitPos.z, 0,0,0);
+        }
 
-
-        return super.use(pState, pLevel, pPos, pPlayer, pHand, pHit);
+        return InteractionResult.SUCCESS;
     }
+
 
     @Nullable
     @Override
@@ -155,4 +202,11 @@ public class Workbench extends BaseEntityBlock {
         return createTickerHelper(pBlockEntityType, ModBlockEntities.WORKBENCH.get(),
                 (pLevel1, pPos, pState1, pBlockEntity) -> pBlockEntity.tick(pLevel1, pPos, pState1));
     }
+
+    public boolean hasBlockEntity(BlockState state) {
+        return state.getValue(PART) == BedPart.FOOT;
+    }
+
+
+
 }
