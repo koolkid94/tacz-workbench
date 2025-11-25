@@ -5,7 +5,7 @@
 	"texture_size": [64, 64],
 	"textures": {
 		"0": "taczworkbench:block/workbench",
-		"particle": "taczworkbench:block/workbench"
+		"particle": "taczworkbench:block/particle"
 	},
 	"elements": [
 		{
