@@ -6,7 +6,6 @@ import net.kuwulkid.taczworkbench.blocks.helper.ShapeUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -39,49 +38,49 @@ import org.jetbrains.annotations.Nullable;
 
 public class Workbench extends BaseEntityBlock {
     public static final EnumProperty<BedPart> PART = BlockStateProperties.BED_PART;
-
-
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 
-    public VoxelShape makeShape(){
+    public VoxelShape makeShape() {
         VoxelShape shape = Shapes.empty();
-        shape = Shapes.join(shape, Shapes.box(0.00625, 0.75, -0.05625, 1.99375, 1, 0.99375), BooleanOp.OR);
-        shape = Shapes.join(shape, Shapes.box(0.0125, 0.75, 0.125, 1.9875, 0.9375, 0.75), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0.00625, 0.9375, -0.05625, 0.99375, 1, 0.93125), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0.0125, 0.75, 0.125, 0.9875, 0.9375, 0.75), BooleanOp.OR);
         shape = Shapes.join(shape, Shapes.box(0.0125, 0, 0, 0.1375, 0.9375, 0.125), BooleanOp.OR);
-        shape = Shapes.join(shape, Shapes.box(1.8625, 0, 0, 1.9875, 0.9375, 0.125), BooleanOp.OR);
         shape = Shapes.join(shape, Shapes.box(0.0125, 0, 0.75, 0.1375, 0.9375, 0.875), BooleanOp.OR);
-        shape = Shapes.join(shape, Shapes.box(1.8625, 0, 0.75, 1.9875, 0.9375, 0.875), BooleanOp.OR);
+        return shape;
+    }
 
+    public VoxelShape headShape() {
+        VoxelShape shape = Shapes.empty();
+        shape = Shapes.join(shape, Shapes.box(0.00625, 0.9375, -0.05625, 0.99375, 1, 0.93125), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0.0125, 0.75, 0.125, 0.9875, 0.9375, 0.75), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0.8625, 0, 0, 0.9875, 0.9375, 0.125), BooleanOp.OR);
+        shape = Shapes.join(shape, Shapes.box(0.8625, 0, 0.75, 0.9875, 0.9375, 0.875), BooleanOp.OR);
         return shape;
     }
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         Direction facing = state.getValue(FACING);
+        if (state.getValue(PART) == BedPart.HEAD) {
+            return ShapeUtils.rotateY(headShape(), Direction.NORTH, facing);
+        }
         return ShapeUtils.rotateY(makeShape(), Direction.NORTH, facing);
     }
 
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state,
                             @Nullable LivingEntity placer, ItemStack stack) {
-
         Direction facing = state.getValue(FACING);
-
-        // Left relative to the block's facing
         Direction left = facing.getClockWise();
-
         BlockPos otherPos = pos.relative(left);
-
-        level.setBlock(otherPos,
-                state.setValue(PART, BedPart.HEAD),
-                3
-        );
+        level.setBlock(otherPos, state.setValue(PART, BedPart.HEAD), 3);
     }
-
 
     public Workbench(Properties pProperties) {
         super(pProperties);
-        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(PART, BedPart.FOOT));
+        this.registerDefaultState(this.stateDefinition.any()
+                .setValue(FACING, Direction.NORTH)
+                .setValue(PART, BedPart.FOOT));
     }
 
     @Override
@@ -99,42 +98,38 @@ public class Workbench extends BaseEntityBlock {
 
     @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return state.getValue(PART) == BedPart.FOOT
-                ? new WorkbenchEntity(pos, state)
-                : null;
+        if (state.getValue(PART) == BedPart.HEAD) {
+            return null;
+        }
+        return new WorkbenchEntity(pos, state);
     }
 
-
-    public RenderShape getRenderShape(BlockState pState){
+    @Override
+    public RenderShape getRenderShape(BlockState state) {
+        if (state.getValue(PART) == BedPart.HEAD) {
+            return RenderShape.INVISIBLE;
+        }
         return RenderShape.MODEL;
     }
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos,
                          BlockState newState, boolean isMoving) {
-
         if (state.getBlock() == newState.getBlock()) {
             super.onRemove(state, level, pos, newState, isMoving);
             return;
         }
 
-        // If this part is broken, also break the other half
-        Direction facing = state.getValue(FACING);
-
         Direction left = state.getValue(FACING).getClockWise();
-
         BlockPos other = (state.getValue(PART) == BedPart.FOOT)
                 ? pos.relative(left)
                 : pos.relative(left.getOpposite());
 
-
         BlockState otherState = level.getBlockState(other);
-
         if (otherState.getBlock() == this) {
             level.destroyBlock(other, false);
         }
 
-        // Drop inventory if we broke the FOOT (BE location)
         if (state.getValue(PART) == BedPart.FOOT) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity instanceof WorkbenchEntity w) {
@@ -145,26 +140,20 @@ public class Workbench extends BaseEntityBlock {
         super.onRemove(state, level, pos, newState, isMoving);
     }
 
-
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos,
                                  Player player, InteractionHand hand, BlockHitResult hit) {
-
-        // If we hit the HEAD half, redirect to the FOOT
         if (state.getValue(PART) == BedPart.HEAD) {
             Direction left = state.getValue(FACING).getClockWise();
-            pos = pos.relative(left.getOpposite()); // FOOT is opposite of left
+            pos = pos.relative(left.getOpposite());
             state = level.getBlockState(pos);
         }
 
-        // Now pos always refers to the FOOT (the BE location)
         BlockEntity be = level.getBlockEntity(pos);
-
         if (!(be instanceof WorkbenchEntity workbench)) {
             return InteractionResult.PASS;
         }
 
-        // >>> Your interaction code here, unchanged <<<
         ItemStack mainHand = player.getMainHandItem();
 
         if (!mainHand.isEmpty() && workbench.getItem(0).isEmpty()) {
@@ -182,23 +171,20 @@ public class Workbench extends BaseEntityBlock {
             workbench.setChanged();
         }
 
-        // particle stuff...
         if (level.isClientSide) {
             Vec3 hitPos = hit.getLocation();
-            level.addParticle(ParticleTypes.FLAME, hitPos.x, hitPos.y, hitPos.z, 0,0,0);
+            level.addParticle(ParticleTypes.FLAME, hitPos.x, hitPos.y, hitPos.z, 0, 0, 0);
         }
 
         return InteractionResult.SUCCESS;
     }
 
-
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level pLevel, BlockState pState, BlockEntityType<T> pBlockEntityType) {
-        if(pLevel.isClientSide()) {
+        if (pLevel.isClientSide()) {
             return null;
         }
-
         return createTickerHelper(pBlockEntityType, ModBlockEntities.WORKBENCH.get(),
                 (pLevel1, pPos, pState1, pBlockEntity) -> pBlockEntity.tick(pLevel1, pPos, pState1));
     }
@@ -206,7 +192,4 @@ public class Workbench extends BaseEntityBlock {
     public boolean hasBlockEntity(BlockState state) {
         return state.getValue(PART) == BedPart.FOOT;
     }
-
-
-
 }

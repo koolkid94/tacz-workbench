@@ -2,8 +2,8 @@ package net.kuwulkid.taczworkbench.blocks.helper;
 
 
 import net.minecraft.core.Direction;
-import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.concurrent.atomic.AtomicReference;
 

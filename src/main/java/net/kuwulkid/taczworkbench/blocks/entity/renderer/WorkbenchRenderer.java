@@ -19,6 +19,8 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
 
 public class WorkbenchRenderer implements BlockEntityRenderer<WorkbenchEntity> {
     private final ModelPart headRoot;
@@ -33,6 +35,11 @@ public class WorkbenchRenderer implements BlockEntityRenderer<WorkbenchEntity> {
     public void render(WorkbenchEntity pBlockEntity, float pPartialTick, PoseStack pPoseStack,
                        MultiBufferSource pBuffer, int pPackedLight, int pPackedOverlay) {
 
+        BlockState state = pBlockEntity.getBlockState();
+        //System.out.println("STATE IS " + state);
+        if (state.hasProperty(Workbench.PART) && state.getValue(Workbench.PART) == BedPart.HEAD) {
+            return;
+        }
 
         ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
         ItemStack itemStack = pBlockEntity.getRenderStack(0);

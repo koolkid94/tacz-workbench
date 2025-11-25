@@ -1,6 +1,5 @@
 package net.kuwulkid.taczworkbench.blocks.entity;
 
-import com.tacz.guns.init.ModBlocks;
 import net.kuwulkid.taczworkbench.Taczworkbench;
 import net.kuwulkid.taczworkbench.blocks.BlocksInit;
 import net.minecraft.world.level.block.entity.BlockEntityType;
