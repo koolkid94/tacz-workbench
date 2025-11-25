@@ -91,6 +91,14 @@ public class Workbench extends BaseEntityBlock {
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         Direction facing = ctx.getHorizontalDirection().getOpposite();
+        BlockPos pos = ctx.getClickedPos();
+        Direction left = facing.getClockWise();
+        BlockPos otherPos = pos.relative(left);
+
+        if (!ctx.getLevel().getBlockState(otherPos).canBeReplaced()) {
+            return null; // Cancel placement if other part cannot be placed
+        }
+
         return this.defaultBlockState()
                 .setValue(FACING, facing)
                 .setValue(PART, BedPart.FOOT);
