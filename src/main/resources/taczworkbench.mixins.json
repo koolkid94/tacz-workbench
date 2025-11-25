@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "tacz.refmap.json",
   "mixins": [
+    "NetworkHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

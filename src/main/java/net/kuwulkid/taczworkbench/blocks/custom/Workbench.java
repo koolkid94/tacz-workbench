@@ -1,5 +1,7 @@
 package net.kuwulkid.taczworkbench.blocks.custom;
 
+import com.tacz.guns.item.AttachmentItem;
+import com.tacz.guns.item.ModernKineticGunItem;
 import net.kuwulkid.taczworkbench.blocks.entity.ModBlockEntities;
 import net.kuwulkid.taczworkbench.blocks.entity.WorkbenchEntity;
 import net.kuwulkid.taczworkbench.blocks.helper.ShapeUtils;
@@ -182,6 +184,13 @@ public class Workbench extends BaseEntityBlock {
         if (level.isClientSide) {
             Vec3 hitPos = hit.getLocation();
             level.addParticle(ParticleTypes.FLAME, hitPos.x, hitPos.y, hitPos.z, 0, 0, 0);
+        }
+
+        if(mainHand.getItem().toString().equals("attachment") && workbench.getItem(0).getItem() instanceof ModernKineticGunItem){
+            AttachmentItem attachment = (AttachmentItem) mainHand.getItem();
+            attachment.getAttachmentId(mainHand.getItem().getDefaultInstance());
+            System.out.println(attachment.getType(mainHand.getItem().getDefaultInstance()));
+
         }
 
         return InteractionResult.SUCCESS;
