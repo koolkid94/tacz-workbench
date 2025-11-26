@@ -194,11 +194,21 @@ public class Workbench extends BaseEntityBlock {
         if(workbench.getItem(0).getItem() instanceof ModernKineticGunItem && player.isCrouching())
         {
             ModernKineticGunItem tableItem = (ModernKineticGunItem) workbench.getItem(0).getItem();
-            player.addItem(tableItem.getAttachment(workbench.getItem(0), SCOPE)); //gives player the attachment in slot
-            player.addItem(tableItem.getAttachment(workbench.getItem(0), STOCK)); //gives player the attachment in slot
-            player.addItem(tableItem.getAttachment(workbench.getItem(0), LASER)); //gives player the attachment in slot
-            player.addItem(tableItem.getAttachment(workbench.getItem(0), MUZZLE)); //gives player the attachment in slot
-            player.addItem(tableItem.getAttachment(workbench.getItem(0), GRIP)); //gives player the attachment in slot
+            if(!player.addItem(tableItem.getAttachment(workbench.getItem(0), SCOPE))){
+                player.drop((tableItem.getAttachment(workbench.getItem(0), SCOPE)), false);
+            } //gives player the attachment in slot
+            if(!player.addItem(tableItem.getAttachment(workbench.getItem(0), STOCK))){
+                player.drop((tableItem.getAttachment(workbench.getItem(0), STOCK)), false);
+            } //gives player the attachment in slot
+            if(!player.addItem(tableItem.getAttachment(workbench.getItem(0), LASER))){
+                player.drop((tableItem.getAttachment(workbench.getItem(0), LASER)), false);
+            } //gives player the attachment in slot
+            if(!player.addItem(tableItem.getAttachment(workbench.getItem(0), MUZZLE))){
+                player.drop((tableItem.getAttachment(workbench.getItem(0), MUZZLE)), false);
+            } //gives player the attachment in slot
+            if(!player.addItem(tableItem.getAttachment(workbench.getItem(0), GRIP  ))){
+                player.drop((tableItem.getAttachment(workbench.getItem(0), GRIP)), false);
+            }
             tableItem.unloadAttachment(workbench.getItem(0),SCOPE );
             tableItem.unloadAttachment(workbench.getItem(0),STOCK);
             tableItem.unloadAttachment(workbench.getItem(0),LASER );
@@ -206,7 +216,7 @@ public class Workbench extends BaseEntityBlock {
             tableItem.unloadAttachment(workbench.getItem(0),GRIP);
             if (level.isClientSide) {
                 Vec3 hitPos = hit.getLocation();
-                level.addParticle(ParticleTypes.SMOKE, hitPos.x, hitPos.y, hitPos.z, 0, 0, 0);
+                level.addParticle(ParticleTypes.ASH, hitPos.x, hitPos.y, hitPos.z, 0, 0, 0);
                 level.playLocalSound(pos, SoundEvents.ANVIL_BREAK, SoundSource.BLOCKS, 1.0F, 1.0F, false);
             }
             return InteractionResult.SUCCESS;
@@ -225,19 +235,34 @@ public class Workbench extends BaseEntityBlock {
 
 
             if(!tableItem.getAttachmentId(workbench.getItem(0), SCOPE).toString().equals("empty") && attachmentItem.getType(mainHand).equals(SCOPE)){ //if not empty
-                player.addItem(tableItem.getAttachment(workbench.getItem(0), SCOPE)); //gives player the attachment in slot
+               // player.addItem(tableItem.getAttachment(workbench.getItem(0), SCOPE)); //gives player the attachment in slot
+                if(!player.addItem(tableItem.getAttachment(workbench.getItem(0), SCOPE))){
+                    player.drop((tableItem.getAttachment(workbench.getItem(0), SCOPE)), false);
+                }
             }
             else if(!tableItem.getAttachmentId(workbench.getItem(0), STOCK).toString().equals("empty") && attachmentItem.getType(mainHand).equals(STOCK)){
-                player.addItem(tableItem.getAttachment(workbench.getItem(0), STOCK)); //gives player the attachment in slot
+               // player.addItem(tableItem.getAttachment(workbench.getItem(0), STOCK)); //gives player the attachment in slot
+                if(!player.addItem(tableItem.getAttachment(workbench.getItem(0), STOCK))){
+                    player.drop((tableItem.getAttachment(workbench.getItem(0), STOCK)), false);
+                }
             }
             else if(!tableItem.getAttachmentId(workbench.getItem(0), LASER).toString().equals("empty") && attachmentItem.getType(mainHand).equals(LASER)){
-                player.addItem(tableItem.getAttachment(workbench.getItem(0), LASER)); //gives player the attachment in slot
+               // player.addItem(tableItem.getAttachment(workbench.getItem(0), LASER)); //gives player the attachment in slot
+                if(!player.addItem(tableItem.getAttachment(workbench.getItem(0), LASER))){
+                    player.drop((tableItem.getAttachment(workbench.getItem(0), LASER)), false);
+                }
             }
             else if(!tableItem.getAttachmentId(workbench.getItem(0), MUZZLE).toString().equals("empty") && attachmentItem.getType(mainHand).equals(MUZZLE)){
-                player.addItem(tableItem.getAttachment(workbench.getItem(0), MUZZLE)); //gives player the attachment in slot
+              //  player.addItem(tableItem.getAttachment(workbench.getItem(0), MUZZLE)); //gives player the attachment in slot
+                if(!player.addItem(tableItem.getAttachment(workbench.getItem(0), MUZZLE))){
+                    player.drop((tableItem.getAttachment(workbench.getItem(0), MUZZLE)), false);
+                }
             }
             else if(!tableItem.getAttachmentId(workbench.getItem(0), GRIP).toString().equals("empty") && attachmentItem.getType(mainHand).equals(GRIP)){
-                player.addItem(tableItem.getAttachment(workbench.getItem(0), GRIP)); //gives player the attachment in slot
+               // player.addItem(tableItem.getAttachment(workbench.getItem(0), GRIP)); //gives player the attachment in slot
+                if(!player.addItem(tableItem.getAttachment(workbench.getItem(0), GRIP))){
+                    player.drop((tableItem.getAttachment(workbench.getItem(0), GRIP)), false);
+                }
             }
 
 
