@@ -205,16 +205,16 @@ public class Workbench extends BaseEntityBlock {
             if(!tableItem.getAttachmentId(workbench.getItem(0), SCOPE).toString().equals("empty") && attachmentItem.getType(mainHand).equals(SCOPE)){ //if not empty
                 player.addItem(tableItem.getAttachment(workbench.getItem(0), SCOPE)); //gives player the attachment in slot
             }
-            if(!tableItem.getAttachmentId(workbench.getItem(0), STOCK).toString().equals("empty") && attachmentItem.getType(mainHand).equals(STOCK)){
+            else if(!tableItem.getAttachmentId(workbench.getItem(0), STOCK).toString().equals("empty") && attachmentItem.getType(mainHand).equals(STOCK)){
                 player.addItem(tableItem.getAttachment(workbench.getItem(0), STOCK)); //gives player the attachment in slot
             }
-            if(!tableItem.getAttachmentId(workbench.getItem(0), LASER).toString().equals("empty") && attachmentItem.getType(mainHand).equals(LASER)){
+            else if(!tableItem.getAttachmentId(workbench.getItem(0), LASER).toString().equals("empty") && attachmentItem.getType(mainHand).equals(LASER)){
                 player.addItem(tableItem.getAttachment(workbench.getItem(0), LASER)); //gives player the attachment in slot
             }
-            if(!tableItem.getAttachmentId(workbench.getItem(0), MUZZLE).toString().equals("empty") && attachmentItem.getType(mainHand).equals(MUZZLE)){
+            else if(!tableItem.getAttachmentId(workbench.getItem(0), MUZZLE).toString().equals("empty") && attachmentItem.getType(mainHand).equals(MUZZLE)){
                 player.addItem(tableItem.getAttachment(workbench.getItem(0), MUZZLE)); //gives player the attachment in slot
             }
-            if(!tableItem.getAttachmentId(workbench.getItem(0), GRIP).toString().equals("empty") && attachmentItem.getType(mainHand).equals(GRIP)){
+            else if(!tableItem.getAttachmentId(workbench.getItem(0), GRIP).toString().equals("empty") && attachmentItem.getType(mainHand).equals(GRIP)){
                 player.addItem(tableItem.getAttachment(workbench.getItem(0), GRIP)); //gives player the attachment in slot
             }
 
