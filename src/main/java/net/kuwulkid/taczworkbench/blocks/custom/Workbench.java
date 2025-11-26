@@ -42,7 +42,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-import static com.tacz.guns.api.item.attachment.AttachmentType.SCOPE;
+import static com.tacz.guns.api.item.attachment.AttachmentType.*;
 
 public class Workbench extends BaseEntityBlock {
     public static final EnumProperty<BedPart> PART = BlockStateProperties.BED_PART;
@@ -179,26 +179,50 @@ public class Workbench extends BaseEntityBlock {
             mainHand.shrink(1);
             workbench.setChanged();
             return InteractionResult.SUCCESS;
+            //put item on bench
         }
 
         if (mainHand.isEmpty() && !workbench.getItem(0).isEmpty()) {
-            Containers.dropItemStack(level, pos.getX(), pos.getY() + .43, pos.getZ(),
+            Containers.dropItemStack(level, pos.getX(), pos.getY() + .93, pos.getZ(),
                     workbench.removeItem(0));
             workbench.setChanged();
+            //remove itom on bench
+            return InteractionResult.SUCCESS;
         }
 
 
         if(mainHand.getItem().toString().equals("attachment") && workbench.getItem(0).getItem() instanceof ModernKineticGunItem){
-            AttachmentItem attachment = (AttachmentItem) mainHand.getItem();
+            ItemStack handAttachment = mainHand;
+            AttachmentItem attachmentItem = (AttachmentItem) handAttachment.getItem();
             ModernKineticGunItem tableItem = (ModernKineticGunItem) workbench.getItem(0).getItem();
+            System.out.println("I AM A " + attachmentItem.getType(mainHand));
 
-            System.out.println("READ ME HERE: " + tableItem.allowAttachment(workbench.getItem(0), mainHand));
 
-            tableItem.installAttachment(workbench.getItem(0), mainHand);
+            if(!tableItem.allowAttachment(workbench.getItem(0), mainHand)){
+                return InteractionResult.FAIL;
+            }
 
-            AttachmentMessage message = new AttachmentMessage(mainHand, 0, SCOPE); //dont know what scope does
+            if(!tableItem.getAttachmentId(workbench.getItem(0), SCOPE).toString().equals("empty") && attachmentItem.getType(mainHand).equals(SCOPE)){ //if not empty
+                player.addItem(tableItem.getAttachment(workbench.getItem(0), SCOPE)); //gives player the attachment in slot
+            }
+            if(!tableItem.getAttachmentId(workbench.getItem(0), STOCK).toString().equals("empty") && attachmentItem.getType(mainHand).equals(STOCK)){
+                player.addItem(tableItem.getAttachment(workbench.getItem(0), STOCK)); //gives player the attachment in slot
+            }
+            if(!tableItem.getAttachmentId(workbench.getItem(0), LASER).toString().equals("empty") && attachmentItem.getType(mainHand).equals(LASER)){
+                player.addItem(tableItem.getAttachment(workbench.getItem(0), LASER)); //gives player the attachment in slot
+            }
+            if(!tableItem.getAttachmentId(workbench.getItem(0), MUZZLE).toString().equals("empty") && attachmentItem.getType(mainHand).equals(MUZZLE)){
+                player.addItem(tableItem.getAttachment(workbench.getItem(0), MUZZLE)); //gives player the attachment in slot
+            }
+            if(!tableItem.getAttachmentId(workbench.getItem(0), GRIP).toString().equals("empty") && attachmentItem.getType(mainHand).equals(GRIP)){
+                player.addItem(tableItem.getAttachment(workbench.getItem(0), GRIP)); //gives player the attachment in slot
+            }
+
+
+            tableItem.installAttachment(workbench.getItem(0), handAttachment);
+            System.out.println("HAND ATTACHMENT:" + handAttachment);
+            AttachmentMessage message = new AttachmentMessage(handAttachment, workbench.getItem(0), SCOPE); //dont know what scope does
             NetworkHandler.CHANNEL.sendToServer(message);
-
             if(!player.getAbilities().instabuild){
                 mainHand.shrink(1);
                 //in creative mode
@@ -208,7 +232,7 @@ public class Workbench extends BaseEntityBlock {
                 level.addParticle(ParticleTypes.SMOKE, hitPos.x, hitPos.y, hitPos.z, 0, 0, 0);
                 level.playLocalSound(pos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 1.0F, 1.0F, false);
             }
-
+            return InteractionResult.SUCCESS;
         }
 
         return InteractionResult.SUCCESS;

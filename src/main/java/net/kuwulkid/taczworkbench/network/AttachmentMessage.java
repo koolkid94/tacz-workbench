@@ -18,23 +18,23 @@ import static com.mojang.text2speech.Narrator.LOGGER;
 
 public class AttachmentMessage {
     private final ItemStack attachmentItem;
-    private final int gunSlotIndex;
+    private final ItemStack gunItem;
     private final AttachmentType attachmentType;
 
-    public AttachmentMessage(ItemStack attachmentItem, int gunSlotIndex, AttachmentType attachmentType) {
+    public AttachmentMessage(ItemStack attachmentItem, ItemStack gunItem, AttachmentType attachmentType) {
         this.attachmentItem = attachmentItem;
-        this.gunSlotIndex = gunSlotIndex;
+        this.gunItem = gunItem;
         this.attachmentType = attachmentType;
     }
 
     public static void encode(AttachmentMessage message, FriendlyByteBuf buf) {
         buf.writeItem(message.attachmentItem);
-        buf.writeInt(message.gunSlotIndex);
+        buf.writeItem(message.gunItem);
         buf.writeEnum(message.attachmentType);
     }
 
     public static AttachmentMessage decode(FriendlyByteBuf buf) {
-        return new AttachmentMessage(buf.readItem(), buf.readInt(), buf.readEnum(AttachmentType.class));
+        return new AttachmentMessage(buf.readItem(), buf.readItem(), buf.readEnum(AttachmentType.class));
     }
 
     public static void handle(AttachmentMessage message, Supplier<NetworkEvent.Context> contextSupplier) {
@@ -47,7 +47,7 @@ public class AttachmentMessage {
                 }
                 Inventory inventory = player.getInventory();
                 ItemStack attachmentItem = message.attachmentItem;
-                ItemStack gunItem = inventory.getItem(message.gunSlotIndex);
+                ItemStack gunItem = message.gunItem;
                 IGun iGun = IGun.getIGunOrNull(gunItem);
                 if (iGun != null) {
                     if (iGun.allowAttachment(gunItem, attachmentItem)) {
