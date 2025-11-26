@@ -45,7 +45,6 @@ public class AttachmentMessage {
                 if (player == null) {
                     return;
                 }
-                Inventory inventory = player.getInventory();
                 ItemStack attachmentItem = message.attachmentItem;
                 ItemStack gunItem = message.gunItem;
                 IGun iGun = IGun.getIGunOrNull(gunItem);

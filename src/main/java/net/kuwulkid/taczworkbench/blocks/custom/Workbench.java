@@ -182,8 +182,8 @@ public class Workbench extends BaseEntityBlock {
             //put item on bench
         }
 
-        if (mainHand.isEmpty() && !workbench.getItem(0).isEmpty()) {
-            Containers.dropItemStack(level, pos.getX(), pos.getY() + .93, pos.getZ(),
+        if (mainHand.isEmpty() && !workbench.getItem(0).isEmpty() && !player.isCrouching()) {
+            Containers.dropItemStack(level, pos.getX(), pos.getY() + 1.93, pos.getZ(),
                     workbench.removeItem(0));
             workbench.setChanged();
             //remove itom on bench
@@ -191,16 +191,38 @@ public class Workbench extends BaseEntityBlock {
         }
 
 
+        if(workbench.getItem(0).getItem() instanceof ModernKineticGunItem && player.isCrouching())
+        {
+            ModernKineticGunItem tableItem = (ModernKineticGunItem) workbench.getItem(0).getItem();
+            player.addItem(tableItem.getAttachment(workbench.getItem(0), SCOPE)); //gives player the attachment in slot
+            player.addItem(tableItem.getAttachment(workbench.getItem(0), STOCK)); //gives player the attachment in slot
+            player.addItem(tableItem.getAttachment(workbench.getItem(0), LASER)); //gives player the attachment in slot
+            player.addItem(tableItem.getAttachment(workbench.getItem(0), MUZZLE)); //gives player the attachment in slot
+            player.addItem(tableItem.getAttachment(workbench.getItem(0), GRIP)); //gives player the attachment in slot
+            tableItem.unloadAttachment(workbench.getItem(0),SCOPE );
+            tableItem.unloadAttachment(workbench.getItem(0),STOCK);
+            tableItem.unloadAttachment(workbench.getItem(0),LASER );
+            tableItem.unloadAttachment(workbench.getItem(0),MUZZLE );
+            tableItem.unloadAttachment(workbench.getItem(0),GRIP);
+            if (level.isClientSide) {
+                Vec3 hitPos = hit.getLocation();
+                level.addParticle(ParticleTypes.SMOKE, hitPos.x, hitPos.y, hitPos.z, 0, 0, 0);
+                level.playLocalSound(pos, SoundEvents.ANVIL_BREAK, SoundSource.BLOCKS, 1.0F, 1.0F, false);
+            }
+            return InteractionResult.SUCCESS;
+        }
+
         if(mainHand.getItem().toString().equals("attachment") && workbench.getItem(0).getItem() instanceof ModernKineticGunItem){
             ItemStack handAttachment = mainHand;
             AttachmentItem attachmentItem = (AttachmentItem) handAttachment.getItem();
             ModernKineticGunItem tableItem = (ModernKineticGunItem) workbench.getItem(0).getItem();
-            System.out.println("I AM A " + attachmentItem.getType(mainHand));
+            //System.out.println("I AM A " + attachmentItem.getType(mainHand));
 
 
             if(!tableItem.allowAttachment(workbench.getItem(0), mainHand)){
                 return InteractionResult.FAIL;
             }
+
 
             if(!tableItem.getAttachmentId(workbench.getItem(0), SCOPE).toString().equals("empty") && attachmentItem.getType(mainHand).equals(SCOPE)){ //if not empty
                 player.addItem(tableItem.getAttachment(workbench.getItem(0), SCOPE)); //gives player the attachment in slot
@@ -220,7 +242,7 @@ public class Workbench extends BaseEntityBlock {
 
 
             tableItem.installAttachment(workbench.getItem(0), handAttachment);
-            System.out.println("HAND ATTACHMENT:" + handAttachment);
+           //System.out.println("HAND ATTACHMENT:" + handAttachment);
             AttachmentMessage message = new AttachmentMessage(handAttachment, workbench.getItem(0), SCOPE); //dont know what scope does
             NetworkHandler.CHANNEL.sendToServer(message);
             if(!player.getAbilities().instabuild){
