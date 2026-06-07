@@ -5,3 +5,6 @@ In world editing of attachments on workbench
 
 END GOAL:
 Removal of default customization screen in favor of in world attachment editing. QD attachments and non-invasive attachment editing will be done through a keybind and first person animation, as well as on the table through removal tools. 
+
+6/6/26 UPDATE
+-Project scope largely absorbed into [here](https://github.com/koolkid94/tacz_mags).
